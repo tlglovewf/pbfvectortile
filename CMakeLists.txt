@@ -16,5 +16,5 @@ include_directories(include)
 include_directories(include/protozero)
 include_directories(include/vtzero)
 
-add_executable(show vtile-show.cpp)
+add_executable(${PROJECT_NAME} vtile-show.cpp)
 #add_executable(test tile_handler.cpp)
