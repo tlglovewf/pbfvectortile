@@ -17,6 +17,39 @@
 #include <iostream>
 #include <string>
 
+/**
+ * Get a specific layer from a vector tile. The layer can be specified as a
+ * number n in which case the nth layer in this tile is returned. Or it can
+ * be specified as text, in which case the layer with that name is returned.
+ *
+ * Calls exit(1) if there is an error.
+ *
+ * @param tile The vector tile.
+ * @param layer_name_or_num specifies the layer.
+ */
+vtzero::layer get_layer(const vtzero::vector_tile& tile, const std::string& layer_name_or_num) {
+    vtzero::layer layer;
+    char* str_end = nullptr;
+    const long num = std::strtol(layer_name_or_num.c_str(), &str_end, 10); // NOLINT(google-runtime-int)
+
+    if (str_end == layer_name_or_num.data() + layer_name_or_num.size()) {
+        if (num >= 0 && num < std::numeric_limits<long>::max()) { // NOLINT(google-runtime-int)
+            layer = tile.get_layer(static_cast<std::size_t>(num));
+            if (!layer) {
+                std::cerr << "No such layer: " << num << '\n';
+                std::exit(1);
+            }
+            return layer;
+        }
+    }
+
+    layer = tile.get_layer_by_name(layer_name_or_num);
+    if (!layer) {
+        std::cerr << "No layer named '" << layer_name_or_num << "'.\n";
+        std::exit(1);
+    }
+    return layer;
+}
 
 class geom_point : public vtzero::geom_point
 {
@@ -249,7 +282,7 @@ int main(int argc, char* argv[]) {
     int layer_num = 0;
     int feature_num = 0;
     try {
-        const auto data = read_file(filename);
+        const auto data = mvt_pbf::read_file(filename);
 
         vtzero::vector_tile tile{data};
 
