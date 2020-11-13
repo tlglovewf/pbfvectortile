@@ -1,35 +1,37 @@
 #include <mvt_utils.hpp>
 
-class mvtpbf_reader
-{
-public:
-   mvtpbf_reader(const std::string &path):mpath(path)
-   {
-   }
 
-   void getVectileData(std::vector<vtzero::GeoItemPtr> &geoms)
-   {
-      const auto data = mvt_pbf::read_file(mpath);
-      vtzero::vector_tile tile(data);
-      while (auto layer = tile.next_layer()) 
-      {
-          while (auto feature = layer.next_feature()) 
-          {
-              vtzero::GeoItemPtr item(mvt_pbf::make_MvtGeomItem(feature.geometry_type()));
-              vtzero::decode_geometry(feature.geometry(),item);
-              geoms.push_back(item);
-          }
-      }
-      std::cout << "_______________________________ " << geoms.size() << "___________________________" << std::endl;
-   }
-protected:
-   std::string mpath;
-};
 
 int main(int argc, char* argv[]) {
-      mvtpbf_reader reader(argv[1]);
-      std::vector<vtzero::GeoItemPtr> geoms;
+      mvt_pbf::mvtpbf_reader reader(argv[1]);
+      mvt_pbf::mvtpbf_reader::GeomVector geoms;
       reader.getVectileData(geoms);
+      for(auto item : geoms)
+      {
+         switch (item->type())
+         {
+         case vtzero::GeomType::POINT :
+         {
+            SETGEOMVALUE(point,vtzero::point,item);
+            std::cout << "point value : " << point.x << " " << point.y << std::endl;
+         }
+            break;
+         case vtzero::GeomType::LINESTRING:
+         {
+            SETGEOMVALUE(line,vtzero::line,item);
+            std::cout << "line size " << line._pts.size() << std::endl;
+         }
+            break;
+         case vtzero::GeomType::POLYGON:
+         {
+            SETGEOMVALUE(polygon,vtzero::polygon,item);
+            std::cout << "polygon type " << polygon._rs.size() << std::endl;
+         }
+            break;
+         default:
+            break;
+         }
+      }
     return 0;
 }
 

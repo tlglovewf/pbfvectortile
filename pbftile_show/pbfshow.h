@@ -2,10 +2,12 @@
 #define PBFSHOW_H
 
 #include <QMainWindow>
-
+#include "mvt_utils.hpp"
 namespace Ui {
 class PbfShow;
 }
+
+
 
 class PbfShow : public QMainWindow
 {
@@ -23,6 +25,7 @@ public:
 
 private:
     Ui::PbfShow *ui;
+    mvt_pbf::mvtpbf_reader::GeomVector mgeoms;
 };
 
 #endif // PBFSHOW_H

@@ -98,7 +98,7 @@ namespace vtzero {
         assert(ptr);
         return *reinterpret_cast<const T*>(ptr->data()); 
     } 
-
+    #define SETGEOMVALUE(V,T,G) const T &V = vtzero::GetGeoData<T>(G)
     class geom_point : public geom_item
     {
     public:
@@ -407,7 +407,7 @@ namespace vtzero {
      * @throws geometry_error If there is a problem with the geometry.
      * @pre Geometry must be a point geometry.
      */
-    void decode_point_geometry(const geometry& geometry, GeoItemPtr geom_handler) {
+    static void decode_point_geometry(const geometry& geometry, GeoItemPtr geom_handler) {
         vtzero_assert(geometry.type() == GeomType::POINT);
         detail::geometry_decoder<decltype(geometry.begin())> decoder{geometry.begin(), geometry.end(), geometry.data().size() / 2};
         return decoder.decode_point(geom_handler);
@@ -423,7 +423,7 @@ namespace vtzero {
      * @throws geometry_error If there is a problem with the geometry.
      * @pre Geometry must be a linestring geometry.
      */
-    void decode_linestring_geometry(const geometry& geometry, GeoItemPtr geom_handler) {
+    static void decode_linestring_geometry(const geometry& geometry, GeoItemPtr geom_handler) {
         vtzero_assert(geometry.type() == GeomType::LINESTRING);
         detail::geometry_decoder<decltype(geometry.begin())> decoder{geometry.begin(), geometry.end(), geometry.data().size() / 2};
         return decoder.decode_linestring(geom_handler);
@@ -439,7 +439,7 @@ namespace vtzero {
      * @throws geometry_error If there is a problem with the geometry.
      * @pre Geometry must be a polygon geometry.
      */
-    void decode_polygon_geometry(const geometry& geometry, GeoItemPtr geom_handler) {
+    static void decode_polygon_geometry(const geometry& geometry, GeoItemPtr geom_handler) {
         vtzero_assert(geometry.type() == GeomType::POLYGON);
         detail::geometry_decoder<decltype(geometry.begin())> decoder{geometry.begin(), geometry.end(), geometry.data().size() / 2};
         return decoder.decode_polygon(geom_handler);
@@ -455,7 +455,7 @@ namespace vtzero {
      * @throws geometry_error If the geometry has type UNKNOWN of if there is
      *                        a problem with the geometry.
      */
-    void decode_geometry(const geometry& geometry, GeoItemPtr geom_handler) {
+    static void decode_geometry(const geometry& geometry, GeoItemPtr geom_handler) {
         detail::geometry_decoder<decltype(geometry.begin())> decoder{geometry.begin(), geometry.end(), geometry.data().size() / 2};
         switch (geometry.type()) {
             case GeomType::POINT:

@@ -1,8 +1,7 @@
-/*****************************************************************************
 
-  Utility functions for vtzero example programs.
+#ifndef MVT_UTILS_H
+#define MVT_UTILS_H
 
-*****************************************************************************/
 #include <vtzero/vector_tile.hpp>
 #include <geometry.hpp>
 #include <cstdlib>
@@ -23,7 +22,7 @@ namespace mvt_pbf
      * @returns a string with the contents of the file.
      * @throws various exceptions if there is an error
      */
-    std::string read_file(const std::string& filename) {
+    static std::string read_file(const std::string& filename) {
         if (filename.empty() || (filename.size() == 1 && filename[0] == '-')) {
             return std::string{std::istreambuf_iterator<char>(std::cin.rdbuf()),
                             std::istreambuf_iterator<char>()};
@@ -52,7 +51,7 @@ namespace mvt_pbf
      * @param filename The file name.
      * @throws various exceptions if there is an error
      */
-    void write_data_to_file(const std::string& buffer, const std::string& filename) {
+    static void write_data_to_file(const std::string& buffer, const std::string& filename) {
         std::ofstream stream{filename, std::ios_base::out | std::ios_base::binary};
         if (!stream) {
             throw std::runtime_error{std::string{"Can not open file '"} + filename + "'"};
@@ -86,7 +85,7 @@ namespace mvt_pbf
         {
 
         }
-        virtual const void* data()const 
+        virtual const void* data()const
         {
             return &mpt;
         }
@@ -113,7 +112,7 @@ namespace mvt_pbf
         {
 
         }
-        virtual const void* data()const 
+        virtual const void* data()const
         {
             return &mline;
         }
@@ -145,7 +144,7 @@ namespace mvt_pbf
         {
             mrings._rs.rbegin()->_t = type;
         }
-        virtual const void* data()const 
+        virtual const void* data()const
         {
             return &mrings;
         }
@@ -155,7 +154,7 @@ namespace mvt_pbf
 
     /*
      *  point geometry display
-     */ 
+     */
     class display_point : public vtzero::geom_point
     {
     public:
@@ -178,7 +177,7 @@ namespace mvt_pbf
 
     /*
      *  line geometry display
-     */ 
+     */
     class display_line : public vtzero::geom_line
     {
         std::string output{};
@@ -213,7 +212,7 @@ namespace mvt_pbf
 
     /*
      *  polygon geometry display
-     */ 
+     */
     class display_polygon : public vtzero::geom_polygon
     {
         std::string output{};
@@ -258,8 +257,8 @@ namespace mvt_pbf
 
     /*
      *   generate a geometry data storage object
-     * 
-     */ 
+     *
+     */
     inline vtzero::GeoItemPtr make_MvtGeomItem(vtzero::GeomType type)
     {
         switch (type)
@@ -278,8 +277,8 @@ namespace mvt_pbf
 
     /*
      *   generate a geometry data display object
-     * 
-     */ 
+     *
+     */
     inline vtzero::GeoItemPtr make_DisplayGeomItem(vtzero::GeomType type)
     {
         switch (type)
@@ -295,4 +294,36 @@ namespace mvt_pbf
             break;
         }
     }
+
+    class mvtpbf_reader
+    {
+    public:
+        typedef std::vector<vtzero::GeoItemPtr> GeomVector;
+        mvtpbf_reader(const std::string &path):mpath(path)
+        {
+        }
+        /*
+         * get vector tile geo datas
+         */
+        void getVectileData(GeomVector &geoms)
+        {
+            const auto data = read_file(mpath);
+            vtzero::vector_tile tile(data);
+            while (auto layer = tile.next_layer())
+            {
+                while (auto feature = layer.next_feature())
+                {
+                    vtzero::GeoItemPtr item(make_MvtGeomItem(feature.geometry_type()));
+                    vtzero::decode_geometry(feature.geometry(),item);
+                    geoms.push_back(item);
+                }
+            }
+            std::cout << " load geometries successfully! " << geoms.size() << "gemos have been loaded." << std::endl;
+        }
+    protected:
+        std::string mpath;
+    };
 }
+
+
+#endif
