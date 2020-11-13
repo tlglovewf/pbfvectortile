@@ -1,16 +1,4 @@
-/*****************************************************************************
-
-  Example program for vtzero library.
-
-  vtzero-show - Show content of vector tile
-
-*****************************************************************************/
-
 #include <mvt_utils.hpp>
-#include <vector_tile.hpp>
-#include <exception>
-#include <iostream>
-#include <string>
 
 class mvtpbf_reader
 {
