@@ -34,7 +34,17 @@ HEADERS += \
 FORMS += \
         pbfshow.ui
 
+PBFINCLUDE += $${PWD}/../include/
+
+INCLUDEPATH += $${PBFINCLUDE} \
+               $${PBFINCLUDE}/protozero/ \
+               $${PBFINCLUDE}/vtzero/
+
+message($$INCLUDEPATH)
+
 # Default rules for deployment.
 qnx: target.path = /tmp/$${TARGET}/bin
 else: unix:!android: target.path = /opt/$${TARGET}/bin
 !isEmpty(target.path): INSTALLS += target
+
+DESTDIR += ./bin

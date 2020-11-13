@@ -373,7 +373,6 @@ namespace vtzero {
         template <typename TFunc>
         bool for_each_feature(TFunc&& func) const {
             vtzero_assert(valid());
-
             protozero::pbf_message<detail::pbf_layer> layer_reader{m_data};
             while (layer_reader.next(detail::pbf_layer::features,
                                      protozero::pbf_wire_type::length_delimited)) {
@@ -381,7 +380,7 @@ namespace vtzero {
                     return false;
                 }
             }
-
+            
             return true;
         }
 

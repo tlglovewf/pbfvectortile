@@ -4,6 +4,7 @@
 
 *****************************************************************************/
 #include <vtzero/vector_tile.hpp>
+#include <geometry.hpp>
 #include <cstdlib>
 #include <fstream>
 #include <iostream>
@@ -69,8 +70,88 @@ namespace mvt_pbf
      * 
      * */
 
+    class mvt_point : public vtzero::geom_point
+    {
+    public:
 
-    class geom_point : public vtzero::geom_point
+        virtual void begin(uint32_t count) override
+        {
+            
+        }
+
+        virtual void setpoint(const vtzero::point &pt) override
+        {
+            mpt = pt ;
+        }
+
+        virtual void end(vtzero::ring_type type = vtzero::ring_type::invalid) override
+        {
+
+        }
+        virtual const void* data()const 
+        {
+            return &mpt;
+        }
+    protected:
+        vtzero::point mpt;
+    };
+
+    class mvt_line : public vtzero::geom_line
+    {
+    public:
+        virtual void begin(uint32_t count) override
+        {
+            mline._pts.reserve(count);
+        }
+
+        virtual void setpoint(const vtzero::point &pt) override
+        {
+            mline._pts.push_back(pt);
+        }
+
+        virtual void end(vtzero::ring_type type = vtzero::ring_type::invalid) override
+        {
+
+        }
+        virtual const void* data()const 
+        {
+            return &mline;
+        }
+    protected:
+        vtzero::line mline;
+    };
+
+    class mvt_polygon : public vtzero::geom_polygon
+    {
+    public:
+        mvt_polygon(){}
+        ~mvt_polygon(){}
+        virtual void begin(uint32_t count) override
+        {
+            vtzero::ring r;
+            r._l._pts.reserve(count);
+            mrings._rs.push_back(r);
+        }
+
+        virtual void setpoint(const vtzero::point &pt) override
+        {
+            mrings._rs.rbegin()->_l._pts.push_back(pt);
+        }
+
+        virtual void end(vtzero::ring_type type = vtzero::ring_type::invalid) override
+        {
+            mrings._rs.rbegin()->_t = type;
+        }
+        virtual const void* data()const 
+        {
+            return &mrings;
+        }
+    protected:
+        vtzero::polygon         mrings;
+    };
+
+
+    class display_point : public vtzero::geom_point
     {
     public:
 
@@ -79,7 +160,7 @@ namespace mvt_pbf
 
         }
 
-        virtual void point(const vtzero::point &pt) override
+        virtual void setpoint(const vtzero::point &pt) override
         {
             std::cout << "      POINT(" << pt.x << ',' << pt.y << ")\n";
         }
@@ -90,7 +171,7 @@ namespace mvt_pbf
         }
     };
 
-    class geom_line : public vtzero::geom_line
+    class display_line : public vtzero::geom_line
     {
         std::string output{};
     public:
@@ -101,7 +182,7 @@ namespace mvt_pbf
             output += "](";
         }
 
-        virtual void point(const vtzero::point &pt) override
+        virtual void setpoint(const vtzero::point &pt) override
         {
             output += std::to_string(pt.x);
             output += ' ';
@@ -122,7 +203,7 @@ namespace mvt_pbf
         }
     };
 
-    class geom_polygon : public vtzero::geom_polygon
+    class display_polygon : public vtzero::geom_polygon
     {
         std::string output{};
     public:
@@ -133,7 +214,7 @@ namespace mvt_pbf
             output += "](";
         }
 
-        virtual void point(const vtzero::point &pt) override
+        virtual void setpoint(const vtzero::point &pt) override
         {
             output += std::to_string(pt.x);
             output += ' ';
@@ -164,16 +245,33 @@ namespace mvt_pbf
 
     };
 
-    inline vtzero::GeoItemPtr make_GeomItem(vtzero::GeomType type)
+    inline vtzero::GeoItemPtr make_MvtGeomItem(vtzero::GeomType type)
     {
         switch (type)
         {
         case vtzero::GeomType::POINT:
-            return vtzero::GeoItemPtr(new geom_point());
+            return vtzero::GeoItemPtr(new mvt_point());
         case vtzero::GeomType::LINESTRING:
-            return vtzero::GeoItemPtr(new geom_line());
+            return vtzero::GeoItemPtr(new mvt_line());
         case vtzero::GeomType::POLYGON:
-            return vtzero::GeoItemPtr(new geom_polygon());
+            return vtzero::GeoItemPtr(new mvt_polygon());
+        default:
+            assert(NULL);
+            break;
+        }
+    }
+
+
+    static vtzero::GeoItemPtr make_DisplayGeomItem(vtzero::GeomType type)
+    {
+        switch (type)
+        {
+        case vtzero::GeomType::POINT:
+            return vtzero::GeoItemPtr(new display_point());
+        case vtzero::GeomType::LINESTRING:
+            return vtzero::GeoItemPtr(new display_line());
+        case vtzero::GeomType::POLYGON:
+            return vtzero::GeoItemPtr(new display_polygon());
         default:
             assert(NULL);
             break;

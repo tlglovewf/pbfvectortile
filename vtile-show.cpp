@@ -60,7 +60,7 @@ public:
 
     }
 
-    virtual void point(const vtzero::point &pt) override
+    virtual void setpoint(const vtzero::point &pt) override
     {
         std::cout << "      POINT(" << pt.x << ',' << pt.y << ")\n";
     }
@@ -82,7 +82,7 @@ public:
         output += "](";
     }
 
-    virtual void point(const vtzero::point &pt) override
+    virtual void setpoint(const vtzero::point &pt) override
     {
         output += std::to_string(pt.x);
         output += ' ';
@@ -114,7 +114,7 @@ public:
         output += "](";
     }
 
-    virtual void point(const vtzero::point &pt) override
+    virtual void setpoint(const vtzero::point &pt) override
     {
         output += std::to_string(pt.x);
         output += ' ';

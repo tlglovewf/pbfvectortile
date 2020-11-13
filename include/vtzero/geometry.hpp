@@ -47,6 +47,12 @@ namespace vtzero {
 
     }; // struct point
 
+    struct line {
+        typedef  std::vector<vtzero::point> points;
+        points _pts;
+    };
+
+
     /**
      * Type of a polygon ring. This can either be "outer", "inner", or
      * "invalid". Invalid is used when the area of the ring is 0.
@@ -57,6 +63,18 @@ namespace vtzero {
         invalid = 2
     }; // enum class ring_type
 
+    struct ring
+    {
+        ring_type _t;
+        line      _l;
+    };
+
+    struct polygon{
+        typedef std::vector<ring> rings;
+        rings _rs;
+    };
+
+
     class geom_item
     {
     public:
@@ -65,10 +83,22 @@ namespace vtzero {
         
         virtual void begin(uint32_t count) = 0; 
 
-        virtual void point(const vtzero::point &pt) = 0;
+        virtual void setpoint(const vtzero::point &pt) = 0;
 
         virtual void end(vtzero::ring_type type = vtzero::ring_type::invalid) = 0;
+         
+        virtual const void* data()const {assert(NULL);}
+        
     };
+    typedef std::shared_ptr<geom_item> GeoItemPtr;
+
+    template<typename T>
+    static const T& GetGeoData(GeoItemPtr ptr)
+    {
+        assert(ptr);
+        return *reinterpret_cast<const T*>(ptr->data()); 
+    } 
+
     class geom_point : public geom_item
     {
     public:
@@ -94,8 +124,8 @@ namespace vtzero {
             return vtzero::GeomType::POLYGON;
         }
     };
+
     
-    typedef std::shared_ptr<geom_item> GeoItemPtr;
     /**
      * Helper function to create a point from any type that has members x
      * and y.
@@ -216,6 +246,8 @@ namespace vtzero {
                 }
 
                 const auto command_id = get_command_id(*m_it);
+                if(command_id == 0)
+                    return false;
                 if (command_id != static_cast<uint32_t>(expected_command_id)) {
                     throw geometry_exception{std::string{"expected command "} +
                                              std::to_string(static_cast<uint32_t>(expected_command_id)) +
@@ -266,7 +298,7 @@ namespace vtzero {
                 return m_cursor;
             }
 
-            void decode_point(GeoItemPtr& geom_handler) {
+            void decode_point(GeoItemPtr geom_handler) {
                 // spec 4.3.4.2 "MUST consist of a single MoveTo command"
                 if (!next_command(CommandId::MOVE_TO)) {
                     throw geometry_exception{"expected MoveTo command (spec 4.3.4.2)"};
@@ -279,7 +311,7 @@ namespace vtzero {
 
                 geom_handler->begin(count());
                 while (count() > 0) {
-                    geom_handler->point(next_point());
+                    geom_handler->setpoint(next_point());
                 }
 
                 // spec 4.3.4.2 "MUST consist of of a single ... command"
@@ -290,7 +322,7 @@ namespace vtzero {
                 geom_handler->end();
             }
 
-            void decode_linestring(GeoItemPtr& geom_handler) {
+            void decode_linestring(GeoItemPtr geom_handler) {
                 // spec 4.3.4.3 "1. A MoveTo command"
                 while (next_command(CommandId::MOVE_TO)) {
                     // spec 4.3.4.3 "with a command count of 1"
@@ -312,16 +344,16 @@ namespace vtzero {
 
                     geom_handler->begin(count() + 1);
 
-                    geom_handler->point(first_point);
+                    geom_handler->setpoint(first_point);
                     while (count() > 0) {
-                        geom_handler->point(next_point());
+                        geom_handler->setpoint(next_point());
                     }
 
                     geom_handler->end();
                 }
             }
 
-            void decode_polygon(GeoItemPtr& geom_handler) {
+            void decode_polygon(GeoItemPtr geom_handler) {
                 // spec 4.3.4.4 "1. A MoveTo command"
                 while (next_command(CommandId::MOVE_TO)) {
                     // spec 4.3.4.4 "with a command count of 1"
@@ -340,23 +372,23 @@ namespace vtzero {
 
                     geom_handler->begin(count() + 2);
 
-                    geom_handler->point(start_point);
+                    geom_handler->setpoint(start_point);
 
                     while (count() > 0) {
                         const point p = next_point();
                         sum += detail::det(last_point, p);
                         last_point = p;
-                        geom_handler->point(p);
+                        geom_handler->setpoint(p);
                     }
 
                     // spec 4.3.4.4 "3. A ClosePath command"
                     if (!next_command(CommandId::CLOSE_PATH)) {
                         throw geometry_exception{"expected ClosePath command (4.3.4.4)"};
                     }
-
+                    //  E|XnYn+1 - YnXn+1|  check if clockwise
                     sum += detail::det(last_point, start_point);
 
-                    geom_handler->point(start_point);
+                    geom_handler->setpoint(start_point);
 
                     geom_handler->end(sum > 0 ? ring_type::outer :
                                        sum < 0 ? ring_type::inner : ring_type::invalid);
@@ -375,7 +407,7 @@ namespace vtzero {
      * @throws geometry_error If there is a problem with the geometry.
      * @pre Geometry must be a point geometry.
      */
-    void decode_point_geometry(const geometry& geometry, GeoItemPtr& geom_handler) {
+    void decode_point_geometry(const geometry& geometry, GeoItemPtr geom_handler) {
         vtzero_assert(geometry.type() == GeomType::POINT);
         detail::geometry_decoder<decltype(geometry.begin())> decoder{geometry.begin(), geometry.end(), geometry.data().size() / 2};
         return decoder.decode_point(geom_handler);
@@ -391,7 +423,7 @@ namespace vtzero {
      * @throws geometry_error If there is a problem with the geometry.
      * @pre Geometry must be a linestring geometry.
      */
-    void decode_linestring_geometry(const geometry& geometry, GeoItemPtr& geom_handler) {
+    void decode_linestring_geometry(const geometry& geometry, GeoItemPtr geom_handler) {
         vtzero_assert(geometry.type() == GeomType::LINESTRING);
         detail::geometry_decoder<decltype(geometry.begin())> decoder{geometry.begin(), geometry.end(), geometry.data().size() / 2};
         return decoder.decode_linestring(geom_handler);
@@ -407,7 +439,7 @@ namespace vtzero {
      * @throws geometry_error If there is a problem with the geometry.
      * @pre Geometry must be a polygon geometry.
      */
-    void decode_polygon_geometry(const geometry& geometry, GeoItemPtr& geom_handler) {
+    void decode_polygon_geometry(const geometry& geometry, GeoItemPtr geom_handler) {
         vtzero_assert(geometry.type() == GeomType::POLYGON);
         detail::geometry_decoder<decltype(geometry.begin())> decoder{geometry.begin(), geometry.end(), geometry.data().size() / 2};
         return decoder.decode_polygon(geom_handler);
@@ -423,7 +455,7 @@ namespace vtzero {
      * @throws geometry_error If the geometry has type UNKNOWN of if there is
      *                        a problem with the geometry.
      */
-    void decode_geometry(const geometry& geometry, GeoItemPtr& geom_handler) {
+    void decode_geometry(const geometry& geometry, GeoItemPtr geom_handler) {
         detail::geometry_decoder<decltype(geometry.begin())> decoder{geometry.begin(), geometry.end(), geometry.data().size() / 2};
         switch (geometry.type()) {
             case GeomType::POINT:

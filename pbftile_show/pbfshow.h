@@ -15,6 +15,12 @@ public:
     explicit PbfShow(QWidget *parent = nullptr);
     ~PbfShow();
 
+public slots:
+    void ClickChoose();
+
+public:
+    virtual void paintEvent(QPaintEvent *event);
+
 private:
     Ui::PbfShow *ui;
 };
