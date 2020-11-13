@@ -127,8 +127,12 @@ void PbfShow::httpReadyRead()
 {
     if(mpReply)
     {
-        mvt_pbf::mvtpbf_reader(mpReply->readAll().toStdString(),mvt_pbf::mvtpbf_reader::ePathType::eData).getVectileData(mgeoms);
-        this->repaint();
+        try {
+            mvt_pbf::mvtpbf_reader(mpReply->readAll().toStdString(),mvt_pbf::mvtpbf_reader::ePathType::eData).getVectileData(mgeoms);
+            this->repaint();
+        } catch (...) {
+
+        }
     }
 }
 
