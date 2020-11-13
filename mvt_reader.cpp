@@ -6,7 +6,7 @@
 
 *****************************************************************************/
 
-#include <utils.hpp>
+#include <mvt_utils.hpp>
 #include <vector_tile.hpp>
 #include <exception>
 #include <iostream>

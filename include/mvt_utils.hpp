@@ -65,11 +65,9 @@ namespace mvt_pbf
         stream.close();
     }
 
-    /****
-     *   define geom reader class 
-     * 
-     * */
-
+    /*
+     *  point geometry storage
+     */
     class mvt_point : public vtzero::geom_point
     {
     public:
@@ -95,7 +93,9 @@ namespace mvt_pbf
     protected:
         vtzero::point mpt;
     };
-
+    /*
+     *  line geometry storage
+     */
     class mvt_line : public vtzero::geom_line
     {
     public:
@@ -121,6 +121,9 @@ namespace mvt_pbf
         vtzero::line mline;
     };
 
+    /*
+     *  polygon geometry storage
+     */
     class mvt_polygon : public vtzero::geom_polygon
     {
     public:
@@ -150,7 +153,9 @@ namespace mvt_pbf
         vtzero::polygon         mrings;
     };
 
-
+    /*
+     *  point geometry display
+     */ 
     class display_point : public vtzero::geom_point
     {
     public:
@@ -171,6 +176,9 @@ namespace mvt_pbf
         }
     };
 
+    /*
+     *  line geometry display
+     */ 
     class display_line : public vtzero::geom_line
     {
         std::string output{};
@@ -203,6 +211,9 @@ namespace mvt_pbf
         }
     };
 
+    /*
+     *  polygon geometry display
+     */ 
     class display_polygon : public vtzero::geom_polygon
     {
         std::string output{};
@@ -245,6 +256,10 @@ namespace mvt_pbf
 
     };
 
+    /*
+     *   generate a geometry data storage object
+     * 
+     */ 
     inline vtzero::GeoItemPtr make_MvtGeomItem(vtzero::GeomType type)
     {
         switch (type)
@@ -261,8 +276,11 @@ namespace mvt_pbf
         }
     }
 
-
-    static vtzero::GeoItemPtr make_DisplayGeomItem(vtzero::GeomType type)
+    /*
+     *   generate a geometry data display object
+     * 
+     */ 
+    inline vtzero::GeoItemPtr make_DisplayGeomItem(vtzero::GeomType type)
     {
         switch (type)
         {
