@@ -299,7 +299,8 @@ namespace mvt_pbf
     {
     public:
         typedef std::vector<vtzero::GeoItemPtr> GeomVector;
-        mvtpbf_reader(const std::string &path):mpath(path)
+        enum class ePathType{ eFile,eData};
+        mvtpbf_reader(const std::string &path,ePathType type = ePathType::eFile):mpath(path),mtype(type)
         {
         }
         /*
@@ -307,7 +308,8 @@ namespace mvt_pbf
          */
         void getVectileData(GeomVector &geoms)
         {
-            const auto data = read_file(mpath);
+            geoms.clear();
+            const auto data = (mtype == ePathType::eFile) ? read_file(mpath) : mpath;
             vtzero::vector_tile tile(data);
             while (auto layer = tile.next_layer())
             {
@@ -322,6 +324,7 @@ namespace mvt_pbf
         }
     protected:
         std::string mpath;
+        ePathType   mtype;
     };
 }
 

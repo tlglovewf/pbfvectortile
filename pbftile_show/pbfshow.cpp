@@ -3,6 +3,7 @@
 #include "qmessagebox.h"
 #include "qfiledialog.h"
 #include <mvt_utils.hpp>
+
 const qreal s_scale =  0.125;  //(512 / 4096.0);
 
 #define TOTILE(V)  static_cast<qreal>((V) * s_scale)
@@ -11,10 +12,11 @@ const qreal s_scale =  0.125;  //(512 / 4096.0);
 #define TRANPT(P) QPointF(TOTILEX(P.x),TOTILEY(P.y))
 PbfShow::PbfShow(QWidget *parent) :
     QMainWindow(parent),
-    ui(new Ui::PbfShow)
+    ui(new Ui::PbfShow),mpNetMgr(new QNetworkAccessManager(this) )
 {
     ui->setupUi(this);
     connect(ui->btnChoose,SIGNAL(clicked()),this,SLOT(ClickChoose()));
+    connect(ui->edPath,SIGNAL(returnPressed()),this,SLOT(GetReturn()));
     ui->gvCanvas->setVisible(false);
     this->move(0,0);
     std::cout << ui->gvCanvas->x() << " " << ui->gvCanvas->y() << std::endl;
@@ -31,6 +33,7 @@ void PbfShow::paintEvent(QPaintEvent *event)
     // 反走样
     painter.setRenderHint(QPainter::Antialiasing, true);
 
+    painter.setClipRect(ui->gvCanvas->geometry());
 
     //draw tile rectborder
     painter.setPen(QPen(QColor(Qt::darkGray),1,Qt::DashLine));
@@ -87,6 +90,7 @@ void PbfShow::paintEvent(QPaintEvent *event)
 //    update();
 
 }
+
 void PbfShow::ClickChoose()
 {
     QDir dir;
@@ -94,8 +98,42 @@ void PbfShow::ClickChoose()
     if(!path.isEmpty())
     {
         ui->edPath->setText(path);
-        mgeoms.clear();
         mvt_pbf::mvtpbf_reader(path.toStdString()).getVectileData(mgeoms);
         this->repaint();
     }
+}
+
+void PbfShow::GetReturn()
+{
+    if(ui->edPath->text().isEmpty())
+    {
+        this->ClickChoose();
+    }
+    else {
+        QUrl url(ui->edPath->text());
+        requestUrl(url);
+    }
+}
+
+void PbfShow::requestUrl(const QUrl &url)
+{
+    mgeoms.clear();
+    mpReply = mpNetMgr->get(QNetworkRequest(url));
+    connect(mpReply,SIGNAL(readyRead() ),this,SLOT(httpReadyRead()));
+    connect(mpReply,SIGNAL(finished()),this, SLOT(httpFinished()));
+
+}
+void PbfShow::httpReadyRead()
+{
+    if(mpReply)
+    {
+        mvt_pbf::mvtpbf_reader(mpReply->readAll().toStdString(),mvt_pbf::mvtpbf_reader::ePathType::eData).getVectileData(mgeoms);
+        this->repaint();
+    }
+}
+
+void PbfShow::httpFinished()
+{
+    mpReply->deleteLater();
+    mpReply = nullptr;
 }
