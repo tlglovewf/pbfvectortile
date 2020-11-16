@@ -320,7 +320,7 @@ namespace mvt_pbf
                     geoms.push_back(item);
                 }
             }
-            std::cout << " load geometries successfully! " << geoms.size() << "gemos have been loaded." << std::endl;
+            std::cout << " load geometries successfully! " << geoms.size() << " gemos have been loaded." << std::endl;
         }
     protected:
         std::string mpath;

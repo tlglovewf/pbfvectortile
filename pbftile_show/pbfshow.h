@@ -9,7 +9,7 @@ namespace Ui {
 class PbfShow;
 }
 
-
+class PbfTileWidget;
 
 class PbfShow : public QMainWindow
 {
@@ -28,12 +28,13 @@ private slots:
     void httpReadyRead();
 public:
     virtual void paintEvent(QPaintEvent *event);
-
+    void keyReleaseEvent(QKeyEvent *event);
 private:
     Ui::PbfShow *ui;
     std::unique_ptr<QNetworkAccessManager>  mpNetMgr;
     QNetworkReply                           *mpReply;
-    mvt_pbf::mvtpbf_reader::GeomVector      mgeoms;
+    PbfTileWidget                           *mpTile;
+    std::string                             mNetData;
 };
 
 #endif // PBFSHOW_H

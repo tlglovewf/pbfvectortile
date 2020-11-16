@@ -26,10 +26,12 @@ CONFIG += c++11
 
 SOURCES += \
         main.cpp \
-        pbfshow.cpp
+        pbfshow.cpp \
+        pbftilewidget.cpp
 
 HEADERS += \
-        pbfshow.h
+        pbfshow.h \
+        pbftilewidget.h
 
 FORMS += \
         pbfshow.ui
