@@ -68,7 +68,8 @@ void PbfShow::GetReturn()
 
 void PbfShow::keyReleaseEvent(QKeyEvent *event)
 {
-    QString mpboxurl = "/home/tu/Downloads/tiles/%1-%2.vector.pbf";
+    QString mpboxurl = "http://d.tiles.mapbox.com/v4/mapbox.mapbox-streets-v7/%1/%2/%3.vector.pbf?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4M29iazA2Z2gycXA4N2pmbDZmangifQ.-g_vE53SD2WrJ6tFX7QHmA";
+
     switch (event->key()) {
         case Qt::Key_W:
     {
@@ -81,7 +82,7 @@ void PbfShow::keyReleaseEvent(QKeyEvent *event)
         {
             for(int j = 0; j < 2; ++j)
             {
-                QString str = mpboxurl.arg(std::to_string(i).c_str(),std::to_string(j).c_str());
+                QString str = mpboxurl.arg("1",std::to_string(i).c_str(),std::to_string(j).c_str());
                 auto tile = new PbfTileWidget(this->centralWidget());
                 tile->setVisible(true);
                 QRect igeo;
@@ -89,8 +90,9 @@ void PbfShow::keyReleaseEvent(QKeyEvent *event)
                 igeo.setY(geo.y() + half_h * j);
                 igeo.setWidth(half_w);
                 igeo.setHeight(half_h);
+                tile->setNetWork(mpNetMgr);
                 tile->setGeometry(igeo);
-                tile->settile(str.toStdString());
+                tile->settile(str.toStdString(),mvt_pbf::mvtpbf_reader::ePathType::eData);
                 tile->update();
                 tile->raise();
             }

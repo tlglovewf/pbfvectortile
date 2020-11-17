@@ -10,7 +10,7 @@ class PbfTileWidget : public QWidget
 {
     Q_OBJECT
 public:
-    PbfTileWidget(QWidget *parent = NULL):QWidget(parent){}
+    PbfTileWidget(QWidget *parent = NULL):QWidget(parent),mpNetWork(NULL){}
     ~PbfTileWidget(){}
 
     void setNetWork(QNetworkAccessManager *network)
