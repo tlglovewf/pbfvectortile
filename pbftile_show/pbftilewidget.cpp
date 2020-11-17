@@ -9,16 +9,56 @@ qreal s_scale =  0.125;  //(512 / 4096.0);
 #define TOTILEY(V) (TOTILE(V) )
 #define TRANPT(P) QPointF(TOTILEX(P.x),TOTILEY(P.y))
 
-void PbfTileWidget::set_tile(const std::string &data,
+void PbfTileWidget::settile(const std::string &path,
                              mvt_pbf::mvtpbf_reader::ePathType type /*= mvt_pbf::mvtpbf_reader::ePathType::eFile*/ )
 {
-    try
+    switch(type)
     {
-         mvt_pbf::mvtpbf_reader(data, type).getVectileData(mgeoms);
-    } catch (...) {
-        QMessageBox::critical(this,"error","There Url Prase Error.");
+    case mvt_pbf::mvtpbf_reader::ePathType::eFile:
+        try
+        {
+             mvt_pbf::mvtpbf_reader(path).getVectileData(mgeoms);
+        } catch (...) {
+            QMessageBox::critical(this,"error","There Url Prase Error.");
+        }
+         this->repaint();
+        break;
+    case mvt_pbf::mvtpbf_reader::ePathType::eData:
+    if(mpNetWork)
+    {
+        mpReply = mpNetWork->get(QNetworkRequest(QUrl(QString(path.c_str()).trimmed())));
+        connect(mpReply,SIGNAL(readyRead() ),this,SLOT(httpReadyRead()));
+        connect(mpReply,SIGNAL(finished()),this, SLOT(httpFinished()));
     }
-            this->repaint();
+    else
+    {
+        QMessageBox::warning(this,"error","Please set network first.");
+    }
+
+        break;
+    default:
+        assert(NULL);
+    }
+
+
+}
+
+void PbfTileWidget::httpReadyRead()
+{
+    if(mpReply)
+    {
+        mTempData.append(mpReply->readAll().toStdString());
+    }
+}
+
+void PbfTileWidget::httpFinished()
+{
+    mvt_pbf::mvtpbf_reader(mTempData,
+                           mvt_pbf::mvtpbf_reader::ePathType::eData).getVectileData(mgeoms);
+    this->repaint();
+    mpReply->deleteLater();
+    mpReply = nullptr;
+    mTempData.clear();
 }
 
 void PbfTileWidget::paintEvent(QPaintEvent *event)

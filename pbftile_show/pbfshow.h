@@ -19,22 +19,16 @@ public:
     explicit PbfShow(QWidget *parent = nullptr);
     ~PbfShow();
 
-    void requestUrl(const QUrl &url);
-
 private slots:
     void ClickChoose();
     void GetReturn();
-    void httpFinished();
-    void httpReadyRead();
 public:
     virtual void paintEvent(QPaintEvent *event);
     void keyReleaseEvent(QKeyEvent *event);
 private:
     Ui::PbfShow *ui;
-    std::unique_ptr<QNetworkAccessManager>  mpNetMgr;
-    QNetworkReply                           *mpReply;
+    QNetworkAccessManager                   *mpNetMgr;
     PbfTileWidget                           *mpTile;
-    std::string                             mNetData;
 };
 
 #endif // PBFSHOW_H

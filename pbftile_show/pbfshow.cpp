@@ -9,6 +9,7 @@ PbfShow::PbfShow(QWidget *parent) :
     ui(new Ui::PbfShow),mpNetMgr(new QNetworkAccessManager(this) )
 {
     ui->setupUi(this);
+    QNetworkAccessManager::
     connect(ui->btnChoose,SIGNAL(clicked()),this,SLOT(ClickChoose()));
     connect(ui->edPath,SIGNAL(returnPressed()),this,SLOT(GetReturn()));
     ui->gvCanvas->setVisible(false);
@@ -16,6 +17,8 @@ PbfShow::PbfShow(QWidget *parent) :
     mpTile = new PbfTileWidget(this->centralWidget());
 
     mpTile->setGeometry(ui->gvCanvas->geometry());
+
+    mpTile->setNetWork(mpNetMgr);
 
     this->move(0,0);
 }
@@ -47,7 +50,7 @@ void PbfShow::ClickChoose()
     if(!path.isEmpty())
     {
         ui->edPath->setText(path);
-        mpTile->set_tile(path.toStdString());
+        mpTile->settile(path.toStdString());
     }
 }
 
@@ -58,35 +61,10 @@ void PbfShow::GetReturn()
         this->ClickChoose();
     }
     else {
-        QUrl url(ui->edPath->text().trimmed());
-
-        requestUrl(url);
+        mpTile->settile(ui->edPath->text().toStdString(),mvt_pbf::mvtpbf_reader::ePathType::eData);
     }
 }
 
-void PbfShow::requestUrl(const QUrl &url)
-{
-    mpReply = mpNetMgr->get(QNetworkRequest(url));
-    connect(mpReply,SIGNAL(readyRead() ),this,SLOT(httpReadyRead()));
-    connect(mpReply,SIGNAL(finished()),this, SLOT(httpFinished()));
-
-}
-
-void PbfShow::httpReadyRead()
-{
-    if(mpReply)
-    {
-        mNetData.append(mpReply->readAll().toStdString());
-    }
-}
-
-void PbfShow::httpFinished()
-{
-    mpTile->set_tile(mNetData,mvt_pbf::mvtpbf_reader::ePathType::eData);
-    mpReply->deleteLater();
-    mpReply = nullptr;
-    mNetData.clear();
-}
 
 void PbfShow::keyReleaseEvent(QKeyEvent *event)
 {
@@ -112,7 +90,7 @@ void PbfShow::keyReleaseEvent(QKeyEvent *event)
                 igeo.setWidth(half_w);
                 igeo.setHeight(half_h);
                 tile->setGeometry(igeo);
-                tile->set_tile(str.toStdString());
+                tile->settile(str.toStdString());
                 tile->update();
                 tile->raise();
             }
