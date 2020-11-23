@@ -4,8 +4,19 @@
 int main(int argc, char *argv[])
 {
     QApplication a(argc, argv);
-    PbfShow w;
-    w.show();
+
+    if(argc == 2)
+    {
+       static PbfShow w(argv[1]);
+       w.show();
+    }
+    else
+    {
+       static PbfShow w;
+       w.show();
+    }
+
+
 
     return a.exec();
 }

@@ -17,11 +17,14 @@ class PbfShow : public QMainWindow
 
 public:
     explicit PbfShow(QWidget *parent = nullptr);
+    explicit PbfShow(const QString &url, QWidget *parent = nullptr);
     ~PbfShow();
 
 private slots:
     void ClickChoose();
     void GetReturn();
+
+    void valueChanged(int i);
 public:
     virtual void paintEvent(QPaintEvent *event);
     void keyReleaseEvent(QKeyEvent *event);

@@ -12,6 +12,8 @@ PbfShow::PbfShow(QWidget *parent) :
     QNetworkAccessManager::
     connect(ui->btnChoose,SIGNAL(clicked()),this,SLOT(ClickChoose()));
     connect(ui->edPath,SIGNAL(returnPressed()),this,SLOT(GetReturn()));
+    connect(ui->lonSpx,SIGNAL(valueChanged(int)),this,SLOT(valueChanged(int)));
+    connect(ui->latSpx,SIGNAL(valueChanged(int)),this,SLOT(valueChanged(int)));
     ui->gvCanvas->setVisible(false);
 
     mpTile = new PbfTileWidget(this->centralWidget());
@@ -20,8 +22,32 @@ PbfShow::PbfShow(QWidget *parent) :
 
     mpTile->setNetWork(mpNetMgr);
 
+    ui->lonSpx->setValue(215769);
+    ui->latSpx->setValue(99256);
+
     this->move(0,0);
 }
+
+PbfShow::PbfShow(const QString &url, QWidget *parent):
+    PbfShow(parent)
+{
+    if(url.contains("http"))
+    {// http url
+        mpTile->settile(url.toStdString(),mvt_pbf::mvtpbf_reader::ePathType::eData);
+    }
+    else
+    {// read file
+        if(QFileInfo::exists(url))
+        {
+            mpTile->settile(url.toStdString());
+        }
+        else
+        {
+            QMessageBox::warning(this,"Error","file not found");
+        }
+    }
+}
+
 
 PbfShow::~PbfShow()
 {
@@ -60,16 +86,22 @@ void PbfShow::GetReturn()
     {
         this->ClickChoose();
     }
-    else {
+    else
+    {
         mpTile->settile(ui->edPath->text().toStdString(),mvt_pbf::mvtpbf_reader::ePathType::eData);
     }
 }
 
+void PbfShow::valueChanged(int v)
+{
+    QKeyEvent event(QEvent::KeyRelease,Qt::Key_W,Qt::KeyboardModifier::NoModifier);
+    keyReleaseEvent(&event);
+}
 
 void PbfShow::keyReleaseEvent(QKeyEvent *event)
 {
-    QString mpboxurl = "http://d.tiles.mapbox.com/v4/mapbox.mapbox-streets-v7/%1/%2/%3.vector.pbf?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4M29iazA2Z2gycXA4N2pmbDZmangifQ.-g_vE53SD2WrJ6tFX7QHmA";
-
+//    QString mpboxurl = "http://d.tiles.mapbox.com/v4/mapbox.mapbox-streets-v7/%1/%2/%3.vector.pbf?access_token=pk.eyJ1IjoibWFwYm94IiwiYSI6ImNpejY4M29iazA2Z2gycXA4N2pmbDZmangifQ.-g_vE53SD2WrJ6tFX7QHmA";
+    QString mpboxurl = "http://fs.navinfo.com/smapapi/parking/mapV/data/vector?dataSource=Parkingmore&z=%1&x=%2&y=%3";
     switch (event->key()) {
         case Qt::Key_W:
     {
@@ -78,23 +110,43 @@ void PbfShow::keyReleaseEvent(QKeyEvent *event)
         const qreal half_w = (geo.width() / 2.0);
         const qreal half_h = (geo.height()/ 2.0);
 
+        static int stX = 0;
+        static int stY = 0;
+
+        if( ((stX == ui->lonSpx->value()) &&
+            (stY == ui->latSpx->value())))
+        {
+            return;
+        }
+        else
+        {
+           stX = ui->lonSpx->value();
+           stY = ui->latSpx->value();
+        }
+
+        static PbfTileWidget *pbftile[4] = {0};
+        int index = 0;
         for(int i = 0;i < 2; ++i)
         {
             for(int j = 0; j < 2; ++j)
             {
-                QString str = mpboxurl.arg("1",std::to_string(i).c_str(),std::to_string(j).c_str());
-                auto tile = new PbfTileWidget(this->centralWidget());
-                tile->setVisible(true);
-                QRect igeo;
-                igeo.setX(geo.x() + half_w * i);
-                igeo.setY(geo.y() + half_h * j);
-                igeo.setWidth(half_w);
-                igeo.setHeight(half_h);
-                tile->setNetWork(mpNetMgr);
-                tile->setGeometry(igeo);
-                tile->settile(str.toStdString(),mvt_pbf::mvtpbf_reader::ePathType::eData);
-                tile->update();
-                tile->raise();
+                QString str = mpboxurl.arg("18",std::to_string(i + stX).c_str(),std::to_string(j + stY).c_str());
+                if(0 == pbftile[index])
+                {
+                    QRect igeo;
+                    pbftile[index] = new PbfTileWidget(this->centralWidget());
+                    igeo.setX(geo.x() + half_w * i);
+                    igeo.setY(geo.y() + half_h * j);
+                    igeo.setWidth(half_w);
+                    igeo.setHeight(half_h);
+                    pbftile[index]->setNetWork(mpNetMgr);
+                    pbftile[index]->setGeometry(igeo);
+                }
+
+                pbftile[index]->setToolTip(str);
+                pbftile[index]->setVisible(true);
+
+                pbftile[index++]->settile(str.toStdString(),mvt_pbf::mvtpbf_reader::ePathType::eData);
             }
         }
 

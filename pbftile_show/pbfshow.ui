@@ -62,7 +62,7 @@
      </rect>
     </property>
    </widget>
-   <widget class="QDoubleSpinBox" name="lonSpx">
+   <widget class="QSpinBox" name="lonSpx">
     <property name="geometry">
      <rect>
       <x>525</x>
@@ -71,14 +71,11 @@
       <height>25</height>
      </rect>
     </property>
-    <property name="decimals">
-     <number>3</number>
-    </property>
     <property name="maximum">
-     <double>180.000000000000000</double>
+     <number>1000000000</number>
     </property>
    </widget>
-   <widget class="QDoubleSpinBox" name="latSpx">
+   <widget class="QSpinBox" name="latSpx">
     <property name="geometry">
      <rect>
       <x>525</x>
@@ -87,11 +84,8 @@
       <height>25</height>
      </rect>
     </property>
-    <property name="decimals">
-     <number>3</number>
-    </property>
     <property name="maximum">
-     <double>90.000000000000000</double>
+     <number>1000000000</number>
     </property>
    </widget>
    <widget class="QPushButton" name="btnCalc">
